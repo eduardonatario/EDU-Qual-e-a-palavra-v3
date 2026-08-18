@@ -1,11 +1,48 @@
-<div align="center">
+# Qual é a Palavra? (Wordle Customizado)
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Jogo de adivinhação de palavras personalizável estilo Wordle em Português.
 
-  <h1>Built with AI Studio</h2>
+## 🚀 Como Publicar no GitHub e GitHub Pages
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+### Opção 1: Implantação Automática via GitHub Actions (Recomendado)
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+1. Crie um novo repositório no seu **GitHub** (ex: `qual-e-a-palavra`).
+2. No seu computador, inicialize o Git, conecte ao seu repositório remoto e faça o push:
+   ```bash
+   git init
+   git add .
+   git commit -m "Initial commit"
+   git branch -M main
+   git remote add origin https://github.com/SEU_USUARIO/qual-e-a-palavra.git
+   git push -u origin main
+   ```
+3. No seu repositório no GitHub:
+   - Vá em **Settings** > **Pages**.
+   - Em **Source**, selecione **GitHub Actions**.
+4. Pronto! Cada `git push` na branch `main` irá compilar e publicar automaticamente seu jogo no GitHub Pages.
 
-</div>
+---
+
+### Opção 2: Implantação Manual via Terminal (`npm run deploy`)
+
+1. Adicione o seu repositório remoto no Git:
+   ```bash
+   git remote add origin https://github.com/SEU_USUARIO/qual-e-a-palavra.git
+   ```
+2. Execute o comando de deploy no terminal:
+   ```bash
+   npm run deploy
+   ```
+3. No GitHub:
+   - Vá em **Settings** > **Pages**.
+   - Em **Source**, selecione **Deploy from a branch** e escolha a branch `gh-pages` / `/ (root)`.
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- **React 19**
+- **Vite**
+- **Tailwind CSS v4**
+- **Lucide Icons** & **Canvas Confetti**
+- **TypeScript**

@@ -1,0 +1,8 @@
+{
+  "name": "Qual é a palavra? v2",
+  "description": "Jogo Qual é a palavra? com painel de administração para definir assunto e palavra secreta, e gerador de HTML standalone para embed.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
