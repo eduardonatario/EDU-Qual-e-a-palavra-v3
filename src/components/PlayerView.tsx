@@ -118,25 +118,31 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
           setIsEvaluating(true);
           const flipDuration = wordLength * 120 + 80;
 
-          // 1. Play victory sounds, speech/audio and confetti immediately after the tiles flip
+          // 1. Play victory sounds & confetti immediately after tiles flip
           setTimeout(() => {
             sounds.playWin();
-            playVictoryAudioFeedback(config);
             confetti({
               particleCount: 120,
               spread: 70,
               origin: { y: 0.6 },
             });
+
+            // 2. If victory audio or speech is configured, read the word and show modal once done
+            if (config.victoryAudioType && config.victoryAudioType !== 'none') {
+              playVictoryAudioFeedback(config, () => {
+                setTimeout(() => {
+                  setStatus('WON');
+                  setIsEvaluating(false);
+                }, 350);
+              });
+            } else {
+              // No voice/audio configured, display victory modal after celebration
+              setTimeout(() => {
+                setStatus('WON');
+                setIsEvaluating(false);
+              }, 700);
+            }
           }, flipDuration);
-
-          // 2. Open the victory modal AFTER the word is read out loud
-          const hasAudio = config.victoryAudioType && config.victoryAudioType !== 'none';
-          const modalDelay = flipDuration + (hasAudio ? 1800 : 700);
-
-          setTimeout(() => {
-            setStatus('WON');
-            setIsEvaluating(false);
-          }, modalDelay);
         } else if (nextAttempts.length >= config.maxAttempts) {
           setIsEvaluating(true);
           setTimeout(() => {

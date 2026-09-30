@@ -36,17 +36,17 @@ class SoundManager {
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.04);
+      osc.frequency.setValueAtTime(540, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(780, ctx.currentTime + 0.035);
 
-      gain.gain.setValueAtTime(0.08, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.07, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.035);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(ctx.currentTime + 0.04);
+      osc.stop(ctx.currentTime + 0.035);
     } catch {
       // Ignore audio errors
     }
@@ -165,28 +165,60 @@ class SoundManager {
 
 export const sounds = new SoundManager();
 
-export function playVictoryAudioFeedback(config: {
-  victoryAudioType?: 'none' | 'tts' | 'custom';
-  ttsLanguage?: 'pt-BR' | 'en-US';
-  customAudioUrl?: string;
-  targetWord?: string;
-}) {
+export function playVictoryAudioFeedback(
+  config: {
+    victoryAudioType?: 'none' | 'tts' | 'custom';
+    ttsLanguage?: 'pt-BR' | 'en-US';
+    customAudioUrl?: string;
+    targetWord?: string;
+  },
+  onEnd?: () => void
+) {
+  let finished = false;
+  const finish = () => {
+    if (!finished) {
+      finished = true;
+      if (onEnd) onEnd();
+    }
+  };
+
   if (config.victoryAudioType === 'tts' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(config.targetWord || '');
+      const textToSpeak = config.targetWord || '';
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
       utterance.lang = config.ttsLanguage || 'pt-BR';
       utterance.rate = 0.95;
+
+      utterance.onend = () => finish();
+      utterance.onerror = () => finish();
+
       window.speechSynthesis.speak(utterance);
+
+      // Fallback timeout in case onend event is swallowed by browser
+      const fallbackMs = Math.max(1500, textToSpeak.length * 200);
+      setTimeout(finish, fallbackMs);
     } catch (e) {
       console.warn('Speech synthesis failed:', e);
+      finish();
     }
   } else if (config.victoryAudioType === 'custom' && config.customAudioUrl) {
     try {
       const audio = new Audio(config.customAudioUrl);
-      audio.play().catch((err) => console.warn('Custom audio playback failed:', err));
+      audio.onended = () => finish();
+      audio.onerror = () => finish();
+
+      audio.play().then(() => {
+        setTimeout(finish, 4000);
+      }).catch((err) => {
+        console.warn('Custom audio playback failed:', err);
+        finish();
+      });
     } catch (e) {
       console.warn('Audio element error:', e);
+      finish();
     }
+  } else {
+    finish();
   }
 }

@@ -6,7 +6,7 @@ import { getTranslations } from './i18n';
  * E.g., "Café!" -> "CAFE"
  */
 export function normalizeText(text: string): string {
-  if (!text) return '';
+  if (!text || typeof text !== 'string') return '';
   return text
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -90,8 +90,9 @@ export function generateShareText(
  * styling, and audio for embed / distribution in Portuguese or English.
  */
 export function generateStandaloneHtml(config: GameConfig): string {
-  const normTarget = normalizeText(config.targetWord);
-  const wordLen = normTarget.length;
+  const normTarget = normalizeText(config.targetWord) || 'FILME';
+  const wordLen = normTarget.length || 5;
+  const maxAttempts = config.maxAttempts || 6;
   const lang: AppLanguage = config.language || 'pt';
   const t = getTranslations(lang);
 
@@ -103,20 +104,20 @@ export function generateStandaloneHtml(config: GameConfig): string {
   <title>${escapeHtml(t.appTitle)}</title>
   <style>
     /* Scoped App Styles to avoid interfering with host site */
-    .qep-app-wrapper,
-    .qep-app-wrapper *,
-    .qep-app-wrapper *::before,
-    .qep-app-wrapper *::after {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
-    body {
+    html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
+      min-height: 100%;
       background-color: #ffffff;
+      color: #0f172a;
     }
 
     .qep-app-wrapper {
@@ -140,15 +141,16 @@ export function generateStandaloneHtml(config: GameConfig): string {
       justify-content: flex-start;
       width: 100%;
       min-height: 100vh;
-      padding: 10px 8px;
+      padding: 12px 8px;
       position: relative;
+      box-sizing: border-box;
     }
 
     .qep-header {
       width: 100%;
       max-width: 500px;
       text-align: center;
-      padding-bottom: 6px;
+      padding-bottom: 8px;
       border-bottom: 1px solid #e2e8f0;
       margin-bottom: 8px;
     }
@@ -178,14 +180,15 @@ export function generateStandaloneHtml(config: GameConfig): string {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .qep-grid {
       display: grid;
       gap: 5px;
       width: 100%;
-      max-width: ${Math.min(340, wordLen * 60)}px;
+      max-width: ${Math.min(350, wordLen * 62)}px;
+      margin: 0 auto;
     }
 
     .qep-row {
@@ -196,6 +199,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     .qep-tile {
       aspect-ratio: 1;
+      min-height: 40px;
       background-color: #ffffff;
       border: 2px solid var(--qep-tile-border);
       border-radius: 6px;
@@ -208,6 +212,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       user-select: none;
       transition: transform 0.15s ease, background-color 0.3s ease, border-color 0.3s ease;
       color: #0f172a;
+      box-sizing: border-box;
     }
 
     .qep-tile[data-state="tbd"] {
@@ -241,9 +246,15 @@ export function generateStandaloneHtml(config: GameConfig): string {
     }
 
     @keyframes qep-pop {
-      0% { transform: scale(0.9); }
-      50% { transform: scale(1.1); }
+      0% { transform: scale(0.92); }
+      50% { transform: scale(1.08); }
       100% { transform: scale(1); }
+    }
+
+    @keyframes qep-flip {
+      0% { transform: rotateX(0deg); }
+      50% { transform: rotateX(90deg); }
+      100% { transform: rotateX(0deg); }
     }
 
     @keyframes qep-shake {
@@ -260,7 +271,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       flex-direction: column;
       gap: 5px;
       user-select: none;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
     .qep-kb-row {
@@ -286,6 +297,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       border: none;
       outline: none;
       transition: background-color 0.2s ease, transform 0.05s ease;
+      touch-action: manipulation;
     }
 
     .qep-kb-key:active {
@@ -304,7 +316,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
     .qep-kb-key[data-state="absent"] { background-color: var(--qep-color-absent); color: white; opacity: 0.85; }
 
     .qep-instructions-wrapper {
-      margin-top: 10px;
+      margin-top: 8px;
       text-align: center;
       width: 100%;
       max-width: 500px;
@@ -358,11 +370,12 @@ export function generateStandaloneHtml(config: GameConfig): string {
       line-height: 1;
     }
 
-    /* Modal Palette */
+    /* Modal Backdrop and Card */
     .qep-modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15,23,42,0.6);
+      background: rgba(15,23,42,0.65);
+      backdrop-filter: blur(2px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -386,7 +399,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       max-width: 360px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
       color: #0f172a;
     }
 
@@ -420,7 +433,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       background: #f1f5f9;
       color: #0f172a;
       border: 1px solid #cbd5e1;
-      padding: 8px 16px;
+      padding: 10px 16px;
       border-radius: 8px;
       font-weight: 700;
       font-size: 0.85rem;
@@ -526,10 +539,10 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
   <script>
     const CONFIG = {
-      topic: ${JSON.stringify(config.topic)},
+      topic: ${JSON.stringify(config.topic || '')},
       targetWord: ${JSON.stringify(normTarget)},
       wordLength: ${wordLen},
-      maxAttempts: ${config.maxAttempts},
+      maxAttempts: ${maxAttempts},
       language: ${JSON.stringify(lang)},
       victoryAudioType: ${JSON.stringify(config.victoryAudioType || 'none')},
       ttsLanguage: ${JSON.stringify(config.ttsLanguage || (lang === 'en' ? 'en-US' : 'pt-BR'))},
@@ -549,33 +562,178 @@ export function generateStandaloneHtml(config: GameConfig): string {
     let currentGuess = "";
     let isGameOver = false;
     let keyStates = {};
+    let isInitialized = false;
+
+    const SoundFx = {
+      ctx: null,
+      getCtx: function() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(function() {});
+        }
+        return this.ctx;
+      },
+      playKey: function() {
+        const ctx = this.getCtx();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(540, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(780, ctx.currentTime + 0.035);
+          gain.gain.setValueAtTime(0.07, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.035);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.035);
+        } catch (e) {}
+      },
+      playDelete: function() {
+        const ctx = this.getCtx();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(320, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.045);
+          gain.gain.setValueAtTime(0.07, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.045);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.045);
+        } catch (e) {}
+      },
+      playFlip: function(delayMs) {
+        const self = this;
+        setTimeout(function() {
+          const ctx = self.getCtx();
+          if (!ctx) return;
+          try {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(580, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(290, ctx.currentTime + 0.07);
+            gain.gain.setValueAtTime(0.06, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.07);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.07);
+          } catch (e) {}
+        }, delayMs || 0);
+      },
+      playShake: function() {
+        const ctx = this.getCtx();
+        if (!ctx) return;
+        try {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(150, ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.09, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.12);
+        } catch (e) {}
+      },
+      playWin: function() {
+        const self = this;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach(function(freq, idx) {
+          setTimeout(function() {
+            const ctx = self.getCtx();
+            if (!ctx) return;
+            try {
+              const osc = ctx.createOscillator();
+              const gain = ctx.createGain();
+              osc.type = 'triangle';
+              osc.frequency.setValueAtTime(freq, ctx.currentTime);
+              gain.gain.setValueAtTime(0.1, ctx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.22);
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start();
+              osc.stop(ctx.currentTime + 0.22);
+            } catch (e) {}
+          }, idx * 100);
+        });
+      }
+    };
 
     function normalizeText(text) {
+      if (!text || typeof text !== 'string') return '';
       return text.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
     }
 
-    function playVictoryFeedback() {
+    function playVictoryFeedback(callback) {
+      let called = false;
+      const done = function() {
+        if (!called) {
+          called = true;
+          if (callback && typeof callback === 'function') callback();
+        }
+      };
+
       if (CONFIG.victoryAudioType === 'tts' && 'speechSynthesis' in window) {
         try {
           window.speechSynthesis.cancel();
           const utter = new SpeechSynthesisUtterance(CONFIG.targetWord);
           utter.lang = CONFIG.ttsLanguage || (CONFIG.language === 'en' ? 'en-US' : 'pt-BR');
           utter.rate = 0.95;
+          utter.onend = done;
+          utter.onerror = done;
           window.speechSynthesis.speak(utter);
+          // Fallback timeout in case speech synth onend is dropped
+          setTimeout(done, Math.max(1600, CONFIG.targetWord.length * 220));
         } catch (e) {
-          console.warn('TTS playback error:', e);
+          console.warn('TTS error:', e);
+          done();
         }
       } else if (CONFIG.victoryAudioType === 'custom' && CONFIG.customAudioUrl) {
         try {
           const audio = new Audio(CONFIG.customAudioUrl);
-          audio.play().catch(e => console.warn('Audio playback error:', e));
+          audio.onended = done;
+          audio.onerror = done;
+          const promise = audio.play();
+          if (promise !== undefined) {
+            promise.then(function() {
+              setTimeout(done, 4000);
+            }).catch(function(e) {
+              console.warn('Audio playback error:', e);
+              done();
+            });
+          } else {
+            setTimeout(done, 2500);
+          }
         } catch (e) {
-          console.warn('Audio error:', e);
+          console.warn('Audio element error:', e);
+          done();
         }
+      } else {
+        done();
       }
     }
 
     function init() {
+      if (isInitialized) return;
+      const grid = document.getElementById('qep-grid');
+      const kb = document.getElementById('qep-keyboard');
+      if (!grid || !kb) {
+        setTimeout(init, 50);
+        return;
+      }
+      isInitialized = true;
       createGrid();
       createKeyboard();
       window.addEventListener('keydown', handleKeyDown);
@@ -583,6 +741,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     function createGrid() {
       const grid = document.getElementById('qep-grid');
+      if (!grid) return;
       grid.innerHTML = '';
       for (let r = 0; r < CONFIG.maxAttempts; r++) {
         const row = document.createElement('div');
@@ -600,6 +759,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     function createKeyboard() {
       const kb = document.getElementById('qep-keyboard');
+      if (!kb) return;
       kb.innerHTML = '';
       const layout = [
         ['Q','W','E','R','T','Y','U','I','O','P'],
@@ -607,15 +767,18 @@ export function generateStandaloneHtml(config: GameConfig): string {
         ['ENTER','Z','X','C','V','B','N','M','DEL']
       ];
 
-      layout.forEach(rowKeys => {
+      layout.forEach(function(rowKeys) {
         const row = document.createElement('div');
         row.className = 'qep-kb-row';
-        rowKeys.forEach(key => {
+        rowKeys.forEach(function(key) {
           const btn = document.createElement('button');
           btn.className = 'qep-kb-key' + (key === 'ENTER' || key === 'DEL' ? ' wide' : '');
           btn.textContent = key === 'DEL' ? '⌫' : key;
           btn.id = 'key-' + key;
-          btn.onclick = () => onKeyPress(key);
+          btn.onclick = function(e) {
+            e.preventDefault();
+            onKeyPress(key);
+          };
           row.appendChild(btn);
         });
         kb.appendChild(row);
@@ -624,9 +787,10 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     function showToast(msg) {
       const t = document.getElementById('qep-toast');
+      if (!t) return;
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2000);
+      setTimeout(function() { t.classList.remove('show'); }, 2000);
     }
 
     function handleKeyDown(e) {
@@ -639,9 +803,13 @@ export function generateStandaloneHtml(config: GameConfig): string {
         if (e.key === 'Enter') resetGame();
         return;
       }
-      if (e.key === 'Enter') onKeyPress('ENTER');
-      else if (e.key === 'Backspace') onKeyPress('DEL');
-      else {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onKeyPress('ENTER');
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        onKeyPress('DEL');
+      } else {
         const normKey = normalizeText(e.key);
         if (normKey.length === 1 && /^[A-Z0-9]$/.test(normKey)) {
           onKeyPress(normKey);
@@ -654,6 +822,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
       if (key === 'DEL') {
         if (currentGuess.length > 0) {
+          SoundFx.playDelete();
           currentGuess = currentGuess.slice(0, -1);
           updateCurrentRow();
         }
@@ -662,6 +831,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       } else if (currentGuess.length < CONFIG.wordLength) {
         const normKey = normalizeText(key);
         if (normKey.length === 1 && /^[A-Z0-9]$/.test(normKey)) {
+          SoundFx.playKey();
           currentGuess += normKey;
           updateCurrentRow();
         }
@@ -672,6 +842,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       const rowIdx = attempts.length;
       for (let c = 0; c < CONFIG.wordLength; c++) {
         const tile = document.getElementById('tile-' + rowIdx + '-' + c);
+        if (!tile) continue;
         const letter = currentGuess[c] || '';
         tile.textContent = letter;
         tile.setAttribute('data-state', letter ? 'tbd' : '');
@@ -680,23 +851,29 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     function submitGuess() {
       if (currentGuess.length < CONFIG.wordLength) {
+        SoundFx.playShake();
         showToast(CONFIG.i18n.incompleteWord);
         const row = document.getElementById('row-' + attempts.length);
-        row.classList.add('qep-shake');
-        setTimeout(() => row.classList.remove('qep-shake'), 400);
+        if (row) {
+          row.classList.add('qep-shake');
+          setTimeout(function() { row.classList.remove('qep-shake'); }, 400);
+        }
         return;
       }
 
       const eval = evaluate(currentGuess, CONFIG.targetWord);
-      attempts.push({ word: currentGuess, eval });
+      attempts.push({ word: currentGuess, eval: eval });
       const rowIdx = attempts.length - 1;
 
-      // Update tiles with state & keyboard
-      eval.forEach((item, c) => {
+      // Update tiles with state & keyboard & play flip sound
+      eval.forEach(function(item, c) {
+        SoundFx.playFlip(c * 100);
         const tile = document.getElementById('tile-' + rowIdx + '-' + c);
-        setTimeout(() => {
-          tile.setAttribute('data-state', item.state);
-        }, c * 100);
+        if (tile) {
+          setTimeout(function() {
+            tile.setAttribute('data-state', item.state);
+          }, c * 100);
+        }
 
         // Update keyboard state priority: correct > present > absent
         const currState = keyStates[item.letter];
@@ -704,7 +881,9 @@ export function generateStandaloneHtml(config: GameConfig): string {
           keyStates[item.letter] = item.state;
           const kBtn = document.getElementById('key-' + item.letter);
           if (kBtn) {
-            setTimeout(() => kBtn.setAttribute('data-state', item.state), (CONFIG.wordLength + 1) * 100);
+            setTimeout(function() {
+              kBtn.setAttribute('data-state', item.state);
+            }, (CONFIG.wordLength + 1) * 100);
           }
         }
       });
@@ -716,21 +895,26 @@ export function generateStandaloneHtml(config: GameConfig): string {
         isGameOver = true;
         const flipDuration = CONFIG.wordLength * 100 + 80;
 
-        // 1. Read / play audio immediately after tiles flip
-        setTimeout(() => {
-          playVictoryFeedback();
+        setTimeout(function() {
+          SoundFx.playWin();
+          // 1. If audio is configured, read the word first, then display congratulations modal
+          if (CONFIG.victoryAudioType && CONFIG.victoryAudioType !== 'none') {
+            playVictoryFeedback(function() {
+              setTimeout(function() {
+                showEndModal(true);
+              }, 350);
+            });
+          } else {
+            setTimeout(function() {
+              showEndModal(true);
+            }, 500);
+          }
         }, flipDuration);
-
-        // 2. Display congratulations modal after the word is read
-        const hasAudio = CONFIG.victoryAudioType && CONFIG.victoryAudioType !== 'none';
-        const modalDelay = flipDuration + (hasAudio ? 1800 : 700);
-
-        setTimeout(() => {
-          showEndModal(true);
-        }, modalDelay);
       } else if (attempts.length >= CONFIG.maxAttempts) {
         isGameOver = true;
-        setTimeout(() => showEndModal(false), CONFIG.wordLength * 100 + 300);
+        setTimeout(function() {
+          showEndModal(false);
+        }, CONFIG.wordLength * 100 + 300);
       }
     }
 
@@ -770,27 +954,35 @@ export function generateStandaloneHtml(config: GameConfig): string {
       const share = document.getElementById('qep-share-grid');
       const audioBtn = document.getElementById('qep-replay-audio-btn');
 
-      if (isWin) {
-        title.textContent = CONFIG.i18n.winTitle;
-        msg.textContent = CONFIG.i18n.winMsgTemplate.replace('{0}', attempts.length).replace('{1}', CONFIG.maxAttempts);
+      if (!modal) return;
 
-        if (CONFIG.victoryAudioType && CONFIG.victoryAudioType !== 'none' && (CONFIG.victoryAudioType === 'tts' || CONFIG.customAudioUrl)) {
-          audioBtn.style.display = 'flex';
-          audioBtn.textContent = '🔊 ' + (CONFIG.victoryAudioType === 'tts' ? CONFIG.i18n.listenAgainTts : CONFIG.i18n.listenAgainAudio);
-        } else {
-          audioBtn.style.display = 'none';
+      if (isWin) {
+        if (title) title.textContent = CONFIG.i18n.winTitle;
+        if (msg) msg.textContent = CONFIG.i18n.winMsgTemplate.replace('{0}', attempts.length).replace('{1}', CONFIG.maxAttempts);
+
+        if (audioBtn) {
+          if (CONFIG.victoryAudioType && CONFIG.victoryAudioType !== 'none' && (CONFIG.victoryAudioType === 'tts' || CONFIG.customAudioUrl)) {
+            audioBtn.style.display = 'flex';
+            audioBtn.textContent = '🔊 ' + (CONFIG.victoryAudioType === 'tts' ? CONFIG.i18n.listenAgainTts : CONFIG.i18n.listenAgainAudio);
+          } else {
+            audioBtn.style.display = 'none';
+          }
         }
       } else {
-        title.textContent = CONFIG.i18n.lossTitle;
-        msg.textContent = CONFIG.i18n.lossMsgTemplate.replace('{0}', CONFIG.targetWord);
+        if (title) title.textContent = CONFIG.i18n.lossTitle;
+        if (msg) msg.textContent = CONFIG.i18n.lossMsgTemplate.replace('{0}', CONFIG.targetWord);
         if (audioBtn) audioBtn.style.display = 'none';
       }
 
-      let shareText = "";
-      attempts.forEach(a => {
-        shareText += a.eval.map(e => e.state === 'correct' ? '🟩' : e.state === 'present' ? '🟨' : '⬛').join('') + '\n';
-      });
-      share.textContent = shareText;
+      if (share) {
+        let shareText = "";
+        attempts.forEach(function(a) {
+          shareText += a.eval.map(function(e) {
+            return e.state === 'correct' ? '🟩' : e.state === 'present' ? '🟨' : '⬛';
+          }).join('') + '\\n';
+        });
+        share.textContent = shareText;
+      }
 
       modal.classList.add('show');
     }
@@ -800,7 +992,8 @@ export function generateStandaloneHtml(config: GameConfig): string {
       currentGuess = "";
       isGameOver = false;
       keyStates = {};
-      document.getElementById('qep-modal').classList.remove('show');
+      const modal = document.getElementById('qep-modal');
+      if (modal) modal.classList.remove('show');
       createGrid();
       createKeyboard();
       if (document.activeElement && document.activeElement.blur) {
@@ -813,6 +1006,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       init();
     } else {
       document.addEventListener('DOMContentLoaded', init);
+      window.addEventListener('load', init);
     }
   </script>
 </body>

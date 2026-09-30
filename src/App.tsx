@@ -40,7 +40,11 @@ export default function App() {
             parsed.topic !== 'Gastronomia' &&
             parsed.targetWord !== 'PRATO'
           ) {
-            return parsed;
+            return {
+              ...DEFAULT_CONFIG,
+              ...parsed,
+              language: parsed.language || 'pt',
+            };
           }
         }
       } catch {
