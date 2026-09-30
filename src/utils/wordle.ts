@@ -1,4 +1,5 @@
-import { Attempt, GameConfig, LetterEvaluation, LetterState } from '../types';
+import { Attempt, GameConfig, LetterEvaluation, LetterState, AppLanguage } from '../types';
+import { getTranslations } from './i18n';
 
 /**
  * Normalizes text for comparison by removing diacritics/accents and non-alphanumeric chars.
@@ -59,7 +60,7 @@ export function evaluateGuess(guessWord: string, targetWord: string): LetterEval
 }
 
 /**
- * Generates Qual é a palavra? shareable emoji block text.
+ * Generates Qual é a palavra? / Word Guess shareable emoji block text.
  */
 export function generateShareText(
   topic: string,
@@ -86,18 +87,20 @@ export function generateShareText(
 
 /**
  * Generates a complete standalone HTML document string containing the entire Qual é a palavra? game logic,
- * styling, and audio for embed / distribution.
+ * styling, and audio for embed / distribution in Portuguese or English.
  */
 export function generateStandaloneHtml(config: GameConfig): string {
   const normTarget = normalizeText(config.targetWord);
   const wordLen = normTarget.length;
+  const lang: AppLanguage = config.language || 'pt';
+  const t = getTranslations(lang);
 
   return `<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="${lang === 'pt' ? 'pt-BR' : 'en'}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Qual é a palavra?</title>
+  <title>${escapeHtml(t.appTitle)}</title>
   <style>
     /* Scoped App Styles to avoid interfering with host site */
     .qep-app-wrapper,
@@ -355,7 +358,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       line-height: 1;
     }
 
-    /* Modal Palette preserved */
+    /* Modal Palette */
     .qep-modal-backdrop {
       position: fixed;
       inset: 0;
@@ -413,6 +416,28 @@ export function generateStandaloneHtml(config: GameConfig): string {
       color: #0f172a;
     }
 
+    .qep-audio-btn {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid #cbd5e1;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .qep-audio-btn:hover {
+      background: #e2e8f0;
+    }
+
     .qep-btn {
       background: #2563eb;
       color: #ffffff;
@@ -422,7 +447,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       font-weight: 600;
       font-size: 0.95rem;
       cursor: pointer;
-      margin-top: 16px;
+      margin-top: 12px;
       width: 100%;
       transition: background-color 0.2s ease;
     }
@@ -459,8 +484,8 @@ export function generateStandaloneHtml(config: GameConfig): string {
     <div id="qep-toast" class="qep-toast"></div>
 
     <header class="qep-header">
-      <div class="qep-title">Qual é a palavra?</div>
-      ${config.hint ? `<div class="qep-hint-box">Dica: ${escapeHtml(config.hint)}</div>` : ''}
+      <div class="qep-title">${escapeHtml(t.appTitle)}</div>
+      ${config.hint ? `<div class="qep-hint-box">${escapeHtml(t.hintPrefix)} ${escapeHtml(config.hint)}</div>` : ''}
     </header>
 
     <main class="qep-main">
@@ -468,19 +493,19 @@ export function generateStandaloneHtml(config: GameConfig): string {
       <div class="qep-keyboard" id="qep-keyboard"></div>
       <div class="qep-instructions-wrapper">
         <button id="qep-show-instructions-btn" onclick="document.getElementById('qep-instructions-box').style.display='block'; this.style.display='none';" class="qep-show-instructions-btn" style="display: ${config.showInstructions === true ? 'none' : 'inline-flex'};">
-          Exibir Instruções do jogo
+          ${escapeHtml(t.showInstructionsBtn)}
         </button>
 
         <div id="qep-instructions-box" class="qep-instructions-box" style="display: ${config.showInstructions === true ? 'block' : 'none'};">
-          <button id="qep-close-instructions-btn" onclick="document.getElementById('qep-instructions-box').style.display='none'; document.getElementById('qep-show-instructions-btn').style.display='inline-flex';" class="qep-close-instructions-btn" title="Fechar instruções" aria-label="Fechar instruções">
+          <button id="qep-close-instructions-btn" onclick="document.getElementById('qep-instructions-box').style.display='none'; document.getElementById('qep-show-instructions-btn').style.display='inline-flex';" class="qep-close-instructions-btn" title="${escapeHtml(t.closeInstructionsTitle)}" aria-label="${escapeHtml(t.closeInstructionsTitle)}">
             &times;
           </button>
-          <p style="margin-bottom: 8px; padding-right: 16px;">Digite uma palavra e pressione Enter para enviá-la.<br>Seu desafio é descobrir a palavra correta!</p>
-          <p style="margin-bottom: 6px; font-weight: 600; border-top: 1px solid #e2e8f0; padding-top: 8px;">Após cada tentativa, observe as cores das letras:</p>
+          <p style="margin-bottom: 8px; padding-right: 16px; white-space: pre-line;">${escapeHtml(t.instructionsP1)}</p>
+          <p style="margin-bottom: 6px; font-weight: 600; border-top: 1px solid #e2e8f0; padding-top: 8px;">${escapeHtml(t.instructionsP2)}</p>
           <div style="display: flex; flex-direction: column; gap: 4px; align-items: center; font-size: 0.78rem;">
-            <div>🟩 <strong>Verde:</strong> a letra está correta e na posição certa.</div>
-            <div>🟨 <strong>Amarelo:</strong> a letra faz parte da palavra, mas está em outra posição.</div>
-            <div>⬛ <strong>Cinza:</strong> a letra não faz parte da palavra.</div>
+            <div>🟩 <strong>${escapeHtml(t.colorGreenLabel)}</strong> ${escapeHtml(t.colorGreenDesc)}</div>
+            <div>🟨 <strong>${escapeHtml(t.colorYellowLabel)}</strong> ${escapeHtml(t.colorYellowDesc)}</div>
+            <div>⬛ <strong>${escapeHtml(t.colorGrayLabel)}</strong> ${escapeHtml(t.colorGrayDesc)}</div>
           </div>
         </div>
       </div>
@@ -488,10 +513,13 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     <div id="qep-modal" class="qep-modal-backdrop">
       <div class="qep-modal-card">
-        <h2 id="qep-modal-title" class="qep-modal-title">Parabéns!</h2>
+        <h2 id="qep-modal-title" class="qep-modal-title">${escapeHtml(t.winTitle)}</h2>
         <p id="qep-modal-msg" class="qep-modal-msg"></p>
         <div id="qep-share-grid" class="qep-share-grid"></div>
-        <button class="qep-btn" onclick="resetGame()">Jogar Novamente</button>
+        <button id="qep-replay-audio-btn" class="qep-audio-btn" onclick="playVictoryFeedback()" style="display: none;">
+          🔊 ${escapeHtml(config.victoryAudioType === 'tts' ? t.listenPronunciationAgain : t.listenAudioAgain)}
+        </button>
+        <button class="qep-btn" onclick="resetGame()">${escapeHtml(t.playAgain)}</button>
       </div>
     </div>
   </div>
@@ -501,7 +529,20 @@ export function generateStandaloneHtml(config: GameConfig): string {
       topic: ${JSON.stringify(config.topic)},
       targetWord: ${JSON.stringify(normTarget)},
       wordLength: ${wordLen},
-      maxAttempts: ${config.maxAttempts}
+      maxAttempts: ${config.maxAttempts},
+      language: ${JSON.stringify(lang)},
+      victoryAudioType: ${JSON.stringify(config.victoryAudioType || 'none')},
+      ttsLanguage: ${JSON.stringify(config.ttsLanguage || (lang === 'en' ? 'en-US' : 'pt-BR'))},
+      customAudioUrl: ${JSON.stringify(config.customAudioUrl || '')},
+      i18n: {
+        winTitle: ${JSON.stringify(t.winTitle)},
+        lossTitle: ${JSON.stringify(t.lossTitle)},
+        winMsgTemplate: ${JSON.stringify(lang === 'pt' ? 'Você acertou em {0}/{1} tentativas!' : 'You guessed it in {0}/{1} attempts!')},
+        lossMsgTemplate: ${JSON.stringify(lang === 'pt' ? 'A palavra correta era: {0}' : 'The correct word was: {0}')},
+        incompleteWord: ${JSON.stringify(lang === 'pt' ? 'Palavra incompleta!' : 'Incomplete word!')},
+        listenAgainTts: ${JSON.stringify(t.listenPronunciationAgain)},
+        listenAgainAudio: ${JSON.stringify(t.listenAudioAgain)}
+      }
     };
 
     let attempts = [];
@@ -511,6 +552,27 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     function normalizeText(text) {
       return text.normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    }
+
+    function playVictoryFeedback() {
+      if (CONFIG.victoryAudioType === 'tts' && 'speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(CONFIG.targetWord);
+          utter.lang = CONFIG.ttsLanguage || (CONFIG.language === 'en' ? 'en-US' : 'pt-BR');
+          utter.rate = 0.95;
+          window.speechSynthesis.speak(utter);
+        } catch (e) {
+          console.warn('TTS playback error:', e);
+        }
+      } else if (CONFIG.victoryAudioType === 'custom' && CONFIG.customAudioUrl) {
+        try {
+          const audio = new Audio(CONFIG.customAudioUrl);
+          audio.play().catch(e => console.warn('Audio playback error:', e));
+        } catch (e) {
+          console.warn('Audio error:', e);
+        }
+      }
     }
 
     function init() {
@@ -618,7 +680,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     function submitGuess() {
       if (currentGuess.length < CONFIG.wordLength) {
-        showToast('Palavra incompleta!');
+        showToast(CONFIG.i18n.incompleteWord);
         const row = document.getElementById('row-' + attempts.length);
         row.classList.add('qep-shake');
         setTimeout(() => row.classList.remove('qep-shake'), 400);
@@ -650,9 +712,25 @@ export function generateStandaloneHtml(config: GameConfig): string {
       const isWin = normalizeText(currentGuess) === CONFIG.targetWord;
       currentGuess = "";
 
-      if (isWin || attempts.length >= CONFIG.maxAttempts) {
+      if (isWin) {
         isGameOver = true;
-        setTimeout(() => showEndModal(isWin), CONFIG.wordLength * 120 + 300);
+        const flipDuration = CONFIG.wordLength * 100 + 80;
+
+        // 1. Read / play audio immediately after tiles flip
+        setTimeout(() => {
+          playVictoryFeedback();
+        }, flipDuration);
+
+        // 2. Display congratulations modal after the word is read
+        const hasAudio = CONFIG.victoryAudioType && CONFIG.victoryAudioType !== 'none';
+        const modalDelay = flipDuration + (hasAudio ? 1800 : 700);
+
+        setTimeout(() => {
+          showEndModal(true);
+        }, modalDelay);
+      } else if (attempts.length >= CONFIG.maxAttempts) {
+        isGameOver = true;
+        setTimeout(() => showEndModal(false), CONFIG.wordLength * 100 + 300);
       }
     }
 
@@ -690,18 +768,27 @@ export function generateStandaloneHtml(config: GameConfig): string {
       const title = document.getElementById('qep-modal-title');
       const msg = document.getElementById('qep-modal-msg');
       const share = document.getElementById('qep-share-grid');
+      const audioBtn = document.getElementById('qep-replay-audio-btn');
 
       if (isWin) {
-        title.textContent = 'Parabéns!';
-        msg.textContent = 'Você acertou em ' + attempts.length + '/' + CONFIG.maxAttempts + ' tentativas!';
+        title.textContent = CONFIG.i18n.winTitle;
+        msg.textContent = CONFIG.i18n.winMsgTemplate.replace('{0}', attempts.length).replace('{1}', CONFIG.maxAttempts);
+
+        if (CONFIG.victoryAudioType && CONFIG.victoryAudioType !== 'none' && (CONFIG.victoryAudioType === 'tts' || CONFIG.customAudioUrl)) {
+          audioBtn.style.display = 'flex';
+          audioBtn.textContent = '🔊 ' + (CONFIG.victoryAudioType === 'tts' ? CONFIG.i18n.listenAgainTts : CONFIG.i18n.listenAgainAudio);
+        } else {
+          audioBtn.style.display = 'none';
+        }
       } else {
-        title.textContent = '❌ Fim de Jogo';
-        msg.textContent = 'A palavra correta era: ' + CONFIG.targetWord;
+        title.textContent = CONFIG.i18n.lossTitle;
+        msg.textContent = CONFIG.i18n.lossMsgTemplate.replace('{0}', CONFIG.targetWord);
+        if (audioBtn) audioBtn.style.display = 'none';
       }
 
       let shareText = "";
       attempts.forEach(a => {
-        shareText += a.eval.map(e => e.state === 'correct' ? '🟩' : e.state === 'present' ? '🟨' : '⬛').join('') + '\\n';
+        shareText += a.eval.map(e => e.state === 'correct' ? '🟩' : e.state === 'present' ? '🟨' : '⬛').join('') + '\n';
       });
       share.textContent = shareText;
 

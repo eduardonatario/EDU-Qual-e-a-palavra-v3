@@ -1,13 +1,18 @@
 import React from 'react';
+import { AppLanguage } from '../types';
+import { getTranslations } from '../utils/i18n';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface RulesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  language?: AppLanguage;
 }
 
-export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
+export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose, language = 'pt' }) => {
+  const t = getTranslations(language);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -26,14 +31,13 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
               <X className="w-5 h-5" />
             </button>
 
-            <h2 className="text-xl font-bold text-slate-900 mb-3">Como Jogar</h2>
-            <p className="text-sm text-gray-600 mb-2">
-              Digite uma palavra e pressione Enter para enviá-la.<br />
-              Seu desafio é descobrir a palavra correta!
+            <h2 className="text-xl font-bold text-slate-900 mb-3">{t.rulesModalTitle}</h2>
+            <p className="text-sm text-gray-600 mb-2 whitespace-pre-line">
+              {t.rulesModalP1}
             </p>
 
             <p className="text-xs font-semibold text-gray-700 mb-3">
-              Após cada tentativa, observe as cores das letras:
+              {t.rulesModalP2}
             </p>
 
             <div className="space-y-3 text-sm">
@@ -42,7 +46,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                   T
                 </div>
                 <div>
-                  <span className="font-semibold text-emerald-600">Verde:</span> a letra está correta e na posição certa.
+                  <span className="font-semibold text-emerald-600">{t.colorGreenLabel}</span> {t.colorGreenDesc}
                 </div>
               </div>
 
@@ -51,7 +55,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                   E
                 </div>
                 <div>
-                  <span className="font-semibold text-amber-600">Amarelo:</span> a letra faz parte da palavra, mas está em outra posição.
+                  <span className="font-semibold text-amber-600">{t.colorYellowLabel}</span> {t.colorYellowDesc}
                 </div>
               </div>
 
@@ -60,7 +64,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                   R
                 </div>
                 <div>
-                  <span className="font-semibold text-slate-600">Cinza:</span> a letra não faz parte da palavra.
+                  <span className="font-semibold text-slate-600">{t.colorGrayLabel}</span> {t.colorGrayDesc}
                 </div>
               </div>
             </div>
@@ -71,7 +75,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ isOpen, onClose }) => {
                 onClick={onClose}
                 className="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors shadow-xs"
               >
-                Entendi, vamos jogar!
+                {t.rulesUnderstandBtn}
               </button>
             </div>
           </motion.div>

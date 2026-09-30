@@ -14,6 +14,11 @@ const DEFAULT_CONFIG: GameConfig = {
   hint: 'Sétima arte e produções audiovisuais para as telonas.',
   maxAttempts: 6,
   showInstructions: false,
+  language: 'pt',
+  victoryAudioType: 'none',
+  ttsLanguage: 'pt-BR',
+  customAudioUrl: '',
+  customAudioFileName: '',
 };
 
 export default function App() {
@@ -64,6 +69,11 @@ export default function App() {
     setActiveTab('player');
   };
 
+  const handleLanguageChange = (lang: 'pt' | 'en') => {
+    const updated = { ...config, language: lang };
+    handleSaveConfig(updated);
+  };
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col font-sans selection:bg-blue-600 selection:text-white antialiased">
       {/* Header Bar */}
@@ -74,6 +84,7 @@ export default function App() {
         soundEnabled={soundEnabled}
         setSoundEnabled={setSoundEnabled}
         onOpenRules={() => setIsRulesOpen(true)}
+        onLanguageChange={handleLanguageChange}
       />
 
       {/* Main View Area */}
@@ -93,7 +104,11 @@ export default function App() {
       </main>
 
       {/* Rules Modal */}
-      <RulesModal isOpen={isRulesOpen} onClose={() => setIsRulesOpen(false)} />
+      <RulesModal
+        isOpen={isRulesOpen}
+        onClose={() => setIsRulesOpen(false)}
+        language={config.language || 'pt'}
+      />
     </div>
   );
 }

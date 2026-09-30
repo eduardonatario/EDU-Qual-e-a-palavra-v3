@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Attempt, GameConfig, GameStatus, LetterState } from '../types';
 import { evaluateGuess, generateShareText, normalizeText } from '../utils/wordle';
-import { sounds } from '../utils/sound';
+import { sounds, playVictoryAudioFeedback } from '../utils/sound';
+import { getTranslations } from '../utils/i18n';
 import { VirtualKeyboard } from './VirtualKeyboard';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
-import { RefreshCw, Share2, Award, Sparkles, X } from 'lucide-react';
+import { RefreshCw, Share2, Award, Sparkles, X, Volume2 } from 'lucide-react';
 
 interface PlayerViewProps {
   config: GameConfig;
@@ -13,12 +14,15 @@ interface PlayerViewProps {
 }
 
 export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) => {
+  const lang = config.language || 'pt';
+  const t = getTranslations(lang);
   const normalizedTarget = normalizeText(config.targetWord);
   const wordLength = normalizedTarget.length || 5;
 
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [currentGuess, setCurrentGuess] = useState<string>('');
   const [status, setStatus] = useState<GameStatus>('IN_PROGRESS');
+  const [isEvaluating, setIsEvaluating] = useState<boolean>(false);
   const [keyStates, setKeyStates] = useState<Record<string, LetterState>>({});
   const [shakingRowIndex, setShakingRowIndex] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -40,6 +44,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
     setAttempts([]);
     setCurrentGuess('');
     setStatus('IN_PROGRESS');
+    setIsEvaluating(false);
     setKeyStates({});
     setShakingRowIndex(null);
     setCopied(false);
@@ -61,7 +66,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
   // Handle key inputs
   const handleKeyPress = useCallback(
     (key: string) => {
-      if (status !== 'IN_PROGRESS') return;
+      if (status !== 'IN_PROGRESS' || isEvaluating) return;
 
       if (key === 'DEL' || key === 'BACKSPACE') {
         if (currentGuess.length > 0) {
@@ -72,7 +77,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
         if (currentGuess.length < wordLength) {
           sounds.playShake();
           setShakingRowIndex(attempts.length);
-          triggerToast(`A palavra deve ter ${wordLength} letras!`);
+          triggerToast(t.wordLengthError(wordLength));
           setTimeout(() => setShakingRowIndex(null), 500);
           return;
         }
@@ -110,17 +115,34 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
         // Check victory or defeat
         const isWin = normalizeText(currentGuess) === normalizedTarget;
         if (isWin) {
-          setStatus('WON');
+          setIsEvaluating(true);
+          const flipDuration = wordLength * 120 + 80;
+
+          // 1. Play victory sounds, speech/audio and confetti immediately after the tiles flip
           setTimeout(() => {
             sounds.playWin();
+            playVictoryAudioFeedback(config);
             confetti({
               particleCount: 120,
               spread: 70,
               origin: { y: 0.6 },
             });
-          }, wordLength * 120 + 200);
+          }, flipDuration);
+
+          // 2. Open the victory modal AFTER the word is read out loud
+          const hasAudio = config.victoryAudioType && config.victoryAudioType !== 'none';
+          const modalDelay = flipDuration + (hasAudio ? 1800 : 700);
+
+          setTimeout(() => {
+            setStatus('WON');
+            setIsEvaluating(false);
+          }, modalDelay);
         } else if (nextAttempts.length >= config.maxAttempts) {
-          setStatus('LOST');
+          setIsEvaluating(true);
+          setTimeout(() => {
+            setStatus('LOST');
+            setIsEvaluating(false);
+          }, wordLength * 120 + 300);
         }
       } else if (currentGuess.length < wordLength) {
         const normKey = normalizeText(key);
@@ -130,7 +152,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
         }
       }
     },
-    [attempts, config.maxAttempts, currentGuess, keyStates, normalizedTarget, status, wordLength]
+    [attempts, config, currentGuess, isEvaluating, keyStates, normalizedTarget, status, t, wordLength]
   );
 
   // Physical keyboard listener
@@ -184,7 +206,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
     );
     navigator.clipboard.writeText(shareText);
     setCopied(true);
-    triggerToast('Resultado copiado para a área de transferência!');
+    triggerToast(t.resultCopied);
     setTimeout(() => setCopied(false), 3000);
   };
 
@@ -209,7 +231,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
       {config.hint && (
         <div className="w-full text-center mb-1 mt-0.5">
           <div className="text-[0.85rem] font-medium text-slate-500 tracking-normal">
-            Dica: {config.hint}
+            {t.hintPrefix} {config.hint}
           </div>
         </div>
       )}
@@ -306,13 +328,13 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
               className="bg-white border border-slate-200 rounded-2xl p-6 max-w-[360px] w-full text-center shadow-xl text-slate-900"
             >
               <h2 className="text-2xl font-extrabold text-slate-900 mb-2">
-                {status === 'WON' ? 'Parabéns!' : 'Que pena!'}
+                {status === 'WON' ? t.winTitle : t.lossTitle}
               </h2>
 
               <p className="text-slate-500 text-sm mb-3">
                 {status === 'WON'
-                  ? `Você acertou a palavra secreta em ${attempts.length} de ${config.maxAttempts} tentativas.`
-                  : `Você não conseguiu desta vez. A palavra era: ${normalizedTarget}`}
+                  ? t.winMessage(attempts.length, config.maxAttempts)
+                  : t.lossMessage(normalizedTarget)}
               </p>
 
               <div className="font-mono whitespace-pre leading-snug my-3 bg-slate-100 p-3 rounded-lg text-lg border border-slate-200 text-slate-900">
@@ -328,12 +350,24 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
               </div>
 
               <div className="space-y-2 mt-4">
+                {status === 'WON' && config.victoryAudioType && config.victoryAudioType !== 'none' && (
+                  <button
+                    id="replay-audio-btn"
+                    type="button"
+                    onClick={() => playVictoryAudioFeedback(config)}
+                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2 border border-slate-200 transition-colors"
+                  >
+                    <Volume2 className="w-4 h-4 text-blue-600" />
+                    <span>{config.victoryAudioType === 'tts' ? t.listenPronunciationAgain : t.listenAudioAgain}</span>
+                  </button>
+                )}
+
                 <button
                   id="play-again-btn"
                   onClick={handleReset}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg text-base transition-colors"
                 >
-                  Jogar Novamente
+                  {t.playAgain}
                 </button>
 
                 {onOpenAdmin && (
@@ -342,7 +376,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
                     onClick={onOpenAdmin}
                     className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg text-xs transition-colors"
                   >
-                    Voltar para Configurações
+                    {t.backToSettings}
                   </button>
                 )}
               </div>
@@ -355,7 +389,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
       <VirtualKeyboard
         keyStates={keyStates}
         onKeyPress={handleKeyPress}
-        disabled={status !== 'IN_PROGRESS'}
+        disabled={status !== 'IN_PROGRESS' || isEvaluating}
       />
 
       {/* Keyboard Instructions and Color Legend */}
@@ -368,34 +402,32 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
               setShowExpandedInstructions(false);
             }}
             className="absolute top-2.5 right-2.5 text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-200/60 transition-colors"
-            title="Fechar instruções"
-            aria-label="Fechar instruções"
+            title={t.closeInstructionsTitle}
+            aria-label={t.closeInstructionsTitle}
           >
             <X className="w-4 h-4" />
           </button>
 
-          <p className="font-medium text-slate-800 pr-6">
-            Digite uma palavra e pressione Enter para enviá-la.
-            <br />
-            Seu desafio é descobrir a palavra correta!
+          <p className="font-medium text-slate-800 pr-6 whitespace-pre-line">
+            {t.instructionsP1}
           </p>
 
           <p className="text-[11px] text-slate-600 font-semibold pt-2 border-t border-slate-200/80">
-            Após cada tentativa, observe as cores das letras:
+            {t.instructionsP2}
           </p>
 
           <div className="flex flex-col items-center justify-center gap-1.5 text-[11px] font-medium text-slate-800">
             <div className="flex items-center gap-1">
               <span>🟩</span>
-              <span><strong>Verde:</strong> a letra está correta e na posição certa.</span>
+              <span><strong>{t.colorGreenLabel}</strong> {t.colorGreenDesc}</span>
             </div>
             <div className="flex items-center gap-1">
               <span>🟨</span>
-              <span><strong>Amarelo:</strong> a letra faz parte da palavra, mas está em outra posição.</span>
+              <span><strong>{t.colorYellowLabel}</strong> {t.colorYellowDesc}</span>
             </div>
             <div className="flex items-center gap-1">
               <span>⬛</span>
-              <span><strong>Cinza:</strong> a letra não faz parte da palavra.</span>
+              <span><strong>{t.colorGrayLabel}</strong> {t.colorGrayDesc}</span>
             </div>
           </div>
         </div>
@@ -410,7 +442,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
             }}
             className="text-xs text-slate-500 hover:text-blue-600 flex items-center justify-center mx-auto transition-colors underline underline-offset-2 font-medium"
           >
-            <span>Exibir Instruções do jogo</span>
+            <span>{t.showInstructionsBtn}</span>
           </button>
         </div>
       )}

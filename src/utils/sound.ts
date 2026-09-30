@@ -164,3 +164,29 @@ class SoundManager {
 }
 
 export const sounds = new SoundManager();
+
+export function playVictoryAudioFeedback(config: {
+  victoryAudioType?: 'none' | 'tts' | 'custom';
+  ttsLanguage?: 'pt-BR' | 'en-US';
+  customAudioUrl?: string;
+  targetWord?: string;
+}) {
+  if (config.victoryAudioType === 'tts' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(config.targetWord || '');
+      utterance.lang = config.ttsLanguage || 'pt-BR';
+      utterance.rate = 0.95;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('Speech synthesis failed:', e);
+    }
+  } else if (config.victoryAudioType === 'custom' && config.customAudioUrl) {
+    try {
+      const audio = new Audio(config.customAudioUrl);
+      audio.play().catch((err) => console.warn('Custom audio playback failed:', err));
+    } catch (e) {
+      console.warn('Audio element error:', e);
+    }
+  }
+}
