@@ -137,7 +137,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       justify-content: flex-start;
       width: 100%;
       min-height: 100vh;
-      padding: 12px;
+      padding: 10px 8px;
       position: relative;
     }
 
@@ -145,13 +145,13 @@ export function generateStandaloneHtml(config: GameConfig): string {
       width: 100%;
       max-width: 500px;
       text-align: center;
-      padding-bottom: 8px;
+      padding-bottom: 6px;
       border-bottom: 1px solid #e2e8f0;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .qep-title {
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 800;
       letter-spacing: 0.02em;
       color: #0f172a;
@@ -163,7 +163,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
     }
 
     .qep-hint-box {
-      margin-top: 6px;
+      margin-top: 4px;
       font-size: 0.85rem;
       color: var(--qep-text-muted);
       font-weight: 500;
@@ -175,22 +175,20 @@ export function generateStandaloneHtml(config: GameConfig): string {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 6px;
     }
 
     .qep-grid {
       display: grid;
-      grid-template-rows: repeat(${config.maxAttempts}, 1fr);
-      gap: 6px;
+      gap: 5px;
       width: 100%;
-      max-width: ${Math.min(350, wordLen * 62)}px;
-      aspect-ratio: ${wordLen} / ${config.maxAttempts};
+      max-width: ${Math.min(340, wordLen * 60)}px;
     }
 
     .qep-row {
       display: grid;
       grid-template-columns: repeat(${wordLen}, 1fr);
-      gap: 6px;
+      gap: 5px;
     }
 
     .qep-tile {
@@ -201,7 +199,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
+      font-size: 1.4rem;
       font-weight: 800;
       text-transform: uppercase;
       user-select: none;
@@ -257,9 +255,9 @@ export function generateStandaloneHtml(config: GameConfig): string {
       max-width: 500px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
       user-select: none;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .qep-kb-row {
@@ -270,12 +268,12 @@ export function generateStandaloneHtml(config: GameConfig): string {
     }
 
     .qep-kb-key {
-      height: 48px;
+      height: 44px;
       border-radius: 6px;
       background-color: var(--qep-key-bg);
       color: var(--qep-key-text);
       font-weight: 700;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -303,7 +301,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
     .qep-kb-key[data-state="absent"] { background-color: var(--qep-color-absent); color: white; opacity: 0.85; }
 
     .qep-instructions-wrapper {
-      margin-top: 14px;
+      margin-top: 10px;
       text-align: center;
       width: 100%;
       max-width: 500px;
@@ -319,7 +317,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       cursor: pointer;
       font-family: inherit;
       font-weight: 500;
-      padding: 6px 12px;
+      padding: 4px 12px;
       transition: color 0.2s;
       display: inline-flex;
       align-items: center;
@@ -329,7 +327,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
 
     .qep-instructions-box {
       position: relative;
-      margin-top: 6px;
+      margin-top: 4px;
       text-align: center;
       font-size: 0.8rem;
       color: #334155;
@@ -337,7 +335,7 @@ export function generateStandaloneHtml(config: GameConfig): string {
       border: 1px solid #cbd5e1;
       border-radius: 12px;
       background-color: #f8fafc;
-      padding: 12px 14px;
+      padding: 10px 12px;
       width: 100%;
       box-sizing: border-box;
     }
@@ -469,11 +467,11 @@ export function generateStandaloneHtml(config: GameConfig): string {
       <div id="qep-grid" class="qep-grid"></div>
       <div class="qep-keyboard" id="qep-keyboard"></div>
       <div class="qep-instructions-wrapper">
-        <button id="qep-show-instructions-btn" onclick="document.getElementById('qep-instructions-box').style.display='block'; this.style.display='none';" class="qep-show-instructions-btn" style="display: ${config.showInstructions !== false ? 'none' : 'inline-flex'};">
+        <button id="qep-show-instructions-btn" onclick="document.getElementById('qep-instructions-box').style.display='block'; this.style.display='none';" class="qep-show-instructions-btn" style="display: ${config.showInstructions === true ? 'none' : 'inline-flex'};">
           Exibir Instruções do jogo
         </button>
 
-        <div id="qep-instructions-box" class="qep-instructions-box" style="display: ${config.showInstructions !== false ? 'block' : 'none'};">
+        <div id="qep-instructions-box" class="qep-instructions-box" style="display: ${config.showInstructions === true ? 'block' : 'none'};">
           <button id="qep-close-instructions-btn" onclick="document.getElementById('qep-instructions-box').style.display='none'; document.getElementById('qep-show-instructions-btn').style.display='inline-flex';" class="qep-close-instructions-btn" title="Fechar instruções" aria-label="Fechar instruções">
             &times;
           </button>

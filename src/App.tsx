@@ -6,14 +6,14 @@ import { AdminView } from './components/AdminView';
 import { RulesModal } from './components/RulesModal';
 import { sounds } from './utils/sound';
 
-const STORAGE_KEY = 'wordle_custom_config_v3';
+const STORAGE_KEY = 'wordle_custom_config_v4';
 
 const DEFAULT_CONFIG: GameConfig = {
   topic: 'Cinema',
   targetWord: 'FILME',
   hint: 'Sétima arte e produções audiovisuais para as telonas.',
   maxAttempts: 6,
-  showInstructions: true,
+  showInstructions: false,
 };
 
 export default function App() {

@@ -27,7 +27,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
       : 'Sétima arte e produções audiovisuais para as telonas.'
   );
   const [maxAttempts, setMaxAttempts] = useState<number>(config.maxAttempts || 6);
-  const [showInstructions, setShowInstructions] = useState<boolean>(config.showInstructions !== false);
+  const [showInstructions, setShowInstructions] = useState<boolean>(config.showInstructions === true);
 
   const [savedNotice, setSavedNotice] = useState<boolean>(false);
   const [copiedHtml, setCopiedHtml] = useState<boolean>(false);
@@ -43,7 +43,7 @@ export const AdminView: React.FC<AdminViewProps> = ({
           : 'Sétima arte e produções audiovisuais para as telonas.'
       );
       setMaxAttempts(config.maxAttempts || 6);
-      setShowInstructions(config.showInstructions !== false);
+      setShowInstructions(config.showInstructions === true);
     }
   }, [config]);
 

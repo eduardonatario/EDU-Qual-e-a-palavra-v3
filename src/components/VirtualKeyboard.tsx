@@ -33,7 +33,7 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
   };
 
   return (
-    <div id="virtual-keyboard" className="w-full max-w-lg mx-auto px-1 select-none space-y-1.5 my-1.5">
+    <div id="virtual-keyboard" className="w-full max-w-lg mx-auto px-1 select-none space-y-1 sm:space-y-1.5 mt-0.5 mb-1">
       {KEYBOARD_ROWS.map((row, rIdx) => (
         <div key={rIdx} className="flex justify-center gap-1 sm:gap-1.5">
           {row.map((key) => {
@@ -47,7 +47,7 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                 disabled={disabled}
                 onClick={() => onKeyPress(key)}
                 className={`
-                  h-12 sm:h-13 rounded-lg font-bold text-xs sm:text-sm tracking-tight transition-all duration-100 flex items-center justify-center border
+                  h-11 sm:h-12 rounded-lg font-bold text-xs sm:text-sm tracking-tight transition-all duration-100 flex items-center justify-center border
                   ${isSpecial ? 'px-2 sm:px-3 min-w-[54px] sm:min-w-[64px] bg-gray-300 hover:bg-gray-400 text-gray-900 border-gray-300 font-extrabold' : 'flex-1 max-w-[42px]'}
                   ${!isSpecial ? getKeyStyle(state) : ''}
                   ${disabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 cursor-pointer'}

@@ -189,7 +189,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col items-center justify-start py-2 px-2 sm:px-4 max-w-xl mx-auto gap-1 sm:gap-2">
+    <div className="w-full flex-1 flex flex-col items-center justify-start py-2 px-2 sm:px-4 max-w-xl mx-auto gap-0.5 sm:gap-1">
       {/* Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
@@ -207,7 +207,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
 
       {/* Hint Info - formatted identically to standalone HTML export */}
       {config.hint && (
-        <div className="w-full text-center mb-1.5 mt-0.5">
+        <div className="w-full text-center mb-1 mt-0.5">
           <div className="text-[0.85rem] font-medium text-slate-500 tracking-normal">
             Dica: {config.hint}
           </div>
@@ -215,11 +215,11 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
       )}
 
       {/* Wordle Grid */}
-      <div className="w-full flex justify-center mb-1 sm:mb-2">
+      <div className="w-full flex justify-center mb-0.5">
         <div
-          className="grid gap-2 w-full"
+          className="grid gap-1.5 sm:gap-2 w-full"
           style={{
-            maxWidth: `${Math.min(360, wordLength * 64)}px`,
+            maxWidth: `${Math.min(350, wordLength * 62)}px`,
             gridTemplateRows: `repeat(${config.maxAttempts}, minmax(0, 1fr))`,
           }}
         >
@@ -359,8 +359,8 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
       />
 
       {/* Keyboard Instructions and Color Legend */}
-      {(config.showInstructions !== false && !isClosedByUser) || showExpandedInstructions ? (
-        <div className="relative w-full max-w-lg mx-auto text-center text-xs text-slate-700 my-3 p-3.5 sm:p-4 space-y-2.5 border border-slate-300 rounded-xl bg-slate-50/80 shadow-xs select-none">
+      {(config.showInstructions === true && !isClosedByUser) || showExpandedInstructions ? (
+        <div className="relative w-full max-w-lg mx-auto text-center text-xs text-slate-700 my-2.5 p-3.5 sm:p-4 space-y-2.5 border border-slate-300 rounded-xl bg-slate-50/80 shadow-xs select-none">
           <button
             type="button"
             onClick={() => {
@@ -400,7 +400,7 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ config, onOpenAdmin }) =
           </div>
         </div>
       ) : (
-        <div className="w-full text-center my-3">
+        <div className="w-full text-center my-2">
           <button
             id="show-instructions-btn"
             type="button"
